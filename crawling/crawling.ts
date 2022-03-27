@@ -1,66 +1,78 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { decode } from 'iconv-lite'
+import { createObjectCsvWriter } from 'csv-writer'
 
-let lastPageNum: number
+// 처음 크롤링 할때 path 부분의 csv 파일이름, axios 주소의 숫자, PageNumber 범위, 카테고리를 바꿔줘야한다. 
 
-(async () => {
-  await axios.get('http://www.yes24.com/24/Category/Display/001001003022')
-    .then(res => {
-      let $ = cheerio.load(res.data)
+const csvHeader = ['id', 'bookName', 'bookCategory', 'bookImgUrl', 'bookWriter', 'bookPub', 'bookPubDate', 'bookPrev']
+const csvWriterHeader = csvHeader.map(el => {
+  return {id: el, title: el}
+})
+const csvWriter = createObjectCsvWriter({
+  path: './컴퓨터_공학.csv',
+  header: csvWriterHeader,
+  append: true
+})
 
-      // 마지막 페이지번호
-      const lastPageNumUrl = $('.yesUI_pagenS .end').attr('href') as string
-      const equalIndexNum = lastPageNumUrl?.indexOf('=')
-      
-      if (equalIndexNum) lastPageNum = +lastPageNumUrl?.slice(equalIndexNum+1)
-      return lastPageNum
-    })
-    .then(res => {
-      console.log(res)
-      for (let i: number =1; i<=1; i++) {
-        let urlArray:string[] = []
-        axios.get(`http://www.yes24.com/24/Category/Display/001001003022?PageNumber=${i}`)
-          .then(res => {
-            // const bodyDecoded = decode(res.data, 'utf-8')
-            // let $ = cheerio.load(bodyDecoded)
-            let $ = cheerio.load(res.data)
-            const $liTags = $('.clearfix').children('li')
-            console.log($liTags.html())
-    
-            $liTags.each((i, el) => {
-              console.log(el)
-              urlArray[i] = $(el).find('.goods_name a').attr('href') as string
-            })
-            return urlArray
-          })
-          .then(res => console.log(res))
-        }
+// 책 링크들을 담는 배열을 만드는 함수
+async function getBookLinks() {
+  let lastPageNum: number
+  const urlArray: string[] = [];
+  const html = await axios.get('http://www.yes24.com/24/Category/Display/001001003031')
+  let $ = cheerio.load(html.data)
+
+  // 마지막 페이지번호
+  const lastPageNumUrl = $('.yesUI_pagenS .end').attr('href') as string
+  const equalIndexNum = lastPageNumUrl?.indexOf('=')
+  
+  if (equalIndexNum) {
+    lastPageNum = +lastPageNumUrl?.slice(equalIndexNum+1) 
+
+    for (let i: number =121; i<=lastPageNum; i++) {
+      console.log('page: ', i)
+      const bookListHtml = await axios.get(`http://www.yes24.com/24/Category/Display/001001003031?PageNumber=${i}`)
+      let $ = cheerio.load(bookListHtml.data)    
+      const $liTags = $('.clearfix').children('li')
+      $liTags.each((i, el) => {
+        urlArray.push($(el).find('.goods_name a').attr('href') as string)
       })
-    .catch(err => console.log(err))
+    }
+  }
+  return urlArray
+}
+
+// 책 상세 정보들을 가져오는 함수
+async function getBookInfo(links: string[]) {
+  const books: object[] = []
+  let id: number = 2401
+  for (const link of links) {
+
+    const html = await axios.get(`http://www.yes24.com${link}`)
+    const $ = cheerio.load(html.data)
+    // 책 이미지
+    const bookImgUrl = $('.gd_img .imgBdr img').attr('src')
   
+    // 책 제목
+    const bookName = $('.gd_titArea .gd_name').text()
   
-
-})()
+    // 책 저자, 출판사, 출판일
+    const bookInfo = $('.gd_pubArea')
+    const bookWriter = bookInfo.find('.gd_auth a').first().text() || bookInfo.find('.gd_auth').first().text().trim()
+    const bookPub = bookInfo.find('.gd_pub a').text()
+    let bookPubDate = bookInfo.find('.gd_date').text()
+    bookPubDate = bookPubDate.replace('년 ', '-').replace('월 ', '-').replace('일', '')
   
+    // 책 소개
+    const bookPrev = $('.infoWrap_txtInner textarea').first().text()
+
+    const book = {id, bookName, bookCategory: '컴퓨터 공학', bookImgUrl, bookWriter, bookPub, bookPubDate, bookPrev}
+    books.push(book)
+    id++
+  }
+  await csvWriter.writeRecords(books)
+}
 
 
-// axios.get('http://www.yes24.com/Product/Goods/2112729')
-//   .then(res => {
-//     const $ = cheerio.load(res.data)
-//     // 책 이미지
-//     const bookImgUrl = $('.gd_img .imgBdr img').attr('src')
-//     console.log(bookImgUrl)
+const result = await getBookLinks()
 
-//     // 책 제목
-//     const bookName = $('.gd_titArea .gd_name').text()
-//     console.log('booknamd: ', bookName)
-
-//     // 책 저자, 출판사, 출판일
-//     const bookInfo = $('.gd_pubArea')
-//     const bookWriter = bookInfo.find('.gd_auth a').text()
-//     const bookPub = bookInfo.find('.gd_pub a').text()
-//     const bookPubDate = bookInfo.find('.gd_date').text()
-//     console.log(bookWriter, bookPub, bookPubDate)
-    
-//   })
+await getBookInfo(result)
