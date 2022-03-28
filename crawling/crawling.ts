@@ -9,7 +9,7 @@ const csvWriterHeader = csvHeader.map(el => {
   return {id: el, title: el}
 })
 const csvWriter = createObjectCsvWriter({
-  path: './컴퓨터_공학.csv',
+  path: './OS_데이터베이스.csv',
   header: csvWriterHeader,
   append: true
 })
@@ -18,7 +18,7 @@ const csvWriter = createObjectCsvWriter({
 async function getBookLinks() {
   let lastPageNum: number
   const urlArray: string[] = [];
-  const html = await axios.get('http://www.yes24.com/24/Category/Display/001001003031')
+  const html = await axios.get('http://www.yes24.com/24/Category/Display/001001003025')
   let $ = cheerio.load(html.data)
 
   // 마지막 페이지번호
@@ -28,9 +28,9 @@ async function getBookLinks() {
   if (equalIndexNum) {
     lastPageNum = +lastPageNumUrl?.slice(equalIndexNum+1) 
 
-    for (let i: number =121; i<=lastPageNum; i++) {
+    for (let i: number =1; i<=lastPageNum; i++) {
       console.log('page: ', i)
-      const bookListHtml = await axios.get(`http://www.yes24.com/24/Category/Display/001001003031?PageNumber=${i}`)
+      const bookListHtml = await axios.get(`http://www.yes24.com/24/Category/Display/001001003025?PageNumber=${i}`)
       let $ = cheerio.load(bookListHtml.data)    
       const $liTags = $('.clearfix').children('li')
       $liTags.each((i, el) => {
@@ -44,7 +44,7 @@ async function getBookLinks() {
 // 책 상세 정보들을 가져오는 함수
 async function getBookInfo(links: string[]) {
   const books: object[] = []
-  let id: number = 2401
+  let id: number = 1
   for (const link of links) {
 
     const html = await axios.get(`http://www.yes24.com${link}`)
@@ -65,7 +65,7 @@ async function getBookInfo(links: string[]) {
     // 책 소개
     const bookPrev = $('.infoWrap_txtInner textarea').first().text()
 
-    const book = {id, bookName, bookCategory: '컴퓨터 공학', bookImgUrl, bookWriter, bookPub, bookPubDate, bookPrev}
+    const book = {id, bookName, bookCategory: 'OS/데이터베이스', bookImgUrl, bookWriter, bookPub, bookPubDate, bookPrev}
     books.push(book)
     id++
   }
