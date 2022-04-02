@@ -2,5 +2,9 @@
   "eslint.enable": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-  }
+  },
+  // 노란색으로 주석 바꾸기
+  "editor.tokenColorCustomizations": {
+    "comments": "#ffa9a9"
+  },
 }
