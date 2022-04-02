@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile-dev
+      context: ./backend
+    
+    volumes:
+      - /app/node_modules
+      - ./backend:/app
+    
+    container_name: project_backend
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - mysql
+  
+  mysql:
+    build: ./mysql
+
+    restart: unless-stopped
+
+    container_name: project_mysql
+
+    ports:
+      - "3306:3306"
+    
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/initialize.sql:/docker-entrypoint-initdb.d/
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: book_review_project
+  
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
