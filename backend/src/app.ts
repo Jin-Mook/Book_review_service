@@ -2,7 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import { createClient } from 'redis';
 
 const app = express();
-const client = createClient();
+const client = createClient({
+  url: 'redis://redis:6379',
+});
 
 app.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -13,6 +15,19 @@ app.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   } catch (err) {
     console.error(err);
     res.send('rule');
+  }
+});
+
+app.get('/redis/:word', async (req, res, next) => {
+  try {
+    const newWord = req.params.word;
+    await client.connect();
+    await client.set('key', newWord);
+    const inputWord = await client.get('key');
+    res.send(`new word is ${inputWord}`);
+  } catch (err) {
+    console.error(err);
+    res.send('error');
   }
 });
 

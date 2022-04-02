@@ -27,6 +27,19 @@ app.get('/:id', (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
         res.send('rule');
     }
 }));
+app.get('/redis/:word', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const newWord = req.params.word;
+        yield client.connect();
+        yield client.set('key', newWord);
+        const inputWord = yield client.get('key');
+        res.send(`new word is ${inputWord}`);
+    }
+    catch (err) {
+        console.error(err);
+        res.send('error');
+    }
+}));
 app.get('/test', (req, res, next) => {
     console.log('test');
     console.log('test2');
