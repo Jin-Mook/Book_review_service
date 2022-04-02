@@ -19,7 +19,6 @@ app.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.get('/', (req, res, next) => {
-  console.log('test');
   res.send('test');
 });
 
