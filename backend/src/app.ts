@@ -24,8 +24,11 @@ app.get('/redis/:word', async (req, res, next) => {
     await client.connect();
     await client.set('key', newWord);
     const inputWord = await client.get('key');
+    await client.disconnect();
     res.send(`new word is ${inputWord}`);
   } catch (err) {
+    // 에러가 발생하면 마찬가지로 레디스 서버를 꺼야한다.
+    client.disconnect();
     console.error(err);
     res.send('error');
   }
