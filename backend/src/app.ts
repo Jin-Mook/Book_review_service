@@ -4,6 +4,7 @@ import { createClient } from 'redis';
 const app = express();
 const client = createClient({
   url: 'redis://redis:6379',
+  password: 'password',
 });
 
 app.get('/:id', async (req: Request, res: Response, next: NextFunction) => {

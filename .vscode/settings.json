@@ -7,4 +7,5 @@
   "editor.tokenColorCustomizations": {
     "comments": "#ffa9a9"
   },
+  "jupyter.jupyterServerType": "local",
 }
