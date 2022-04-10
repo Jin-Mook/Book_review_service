@@ -19,10 +19,6 @@ app.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-app.get('/', (req, res, next) => {
-  res.send('hello');
-});
-
 app.get('/redis/:word', async (req, res, next) => {
   try {
     const newWord = req.params.word;
