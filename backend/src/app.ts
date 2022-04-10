@@ -1,5 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createClient } from 'redis';
+import { config } from 'dotenv';
+
+// .env파일 설정
+config();
 
 const app = express();
 const client = createClient({
